@@ -1,0 +1,89 @@
+<head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
+</head>
+
+<style>
+img {
+	cursor:hand;
+}
+</style>
+<button onclick="myFunction()">Nowa gra</button>
+<button onclick="myFunction1()">Dołącz</button>
+<script>
+var socket,ilosc; 
+
+socket = io.connect('http://localhost:3000');
+
+function myFunction() {
+do{
+    var ilosc = parseInt(window.prompt("Ilość graczy od 2 do 5", ""), 10);
+}while(isNaN(ilosc) || ilosc > 5 || ilosc < 2);
+ilosc--;
+var iloscgraczy = { x: ilosc+1 };
+socket.emit('gra', iloscgraczy);
+}
+
+function myFunction1() {
+	socket.on('grall', tes);
+	console.log("dolacz");
+function tes(data){
+if(data!=null){
+	ilosc=data.x;
+	console.log(ilosc.x);
+}
+}
+}
+
+
+
+</script>
+
+<div id="talia" style="float:left;">
+<img src="./list/re.png" onclick="nowagra()" style="width:178;height:252;">
+</div>
+<br />
+<div id="gracze">
+	
+<div>
+<script>
+for(i=0;i<=ilosc;i++){
+document.getElementById("gracze").innerHTML+= '<div id="gracz'+i+'" style="float:left;">Karty gracza</div>';
+}
+
+var karty=[];
+karty[0]={nazwa:"Strażniczka", wartosc:1, img:"/list/0.png"}; //6
+karty[1]={nazwa:"Strażniczka", wartosc:1, img:"/list/0.png"}; //6
+karty[2]={nazwa:"Strażniczka", wartosc:1, img:"/list/0.png"}; //6
+karty[3]={nazwa:"Strażniczka", wartosc:1, img:"/list/0.png"}; //6
+karty[4]={nazwa:"Strażniczka", wartosc:1, img:"/list/0.png"}; //6
+karty[5]={nazwa:"Strażniczka", wartosc:1, img:"/list/0.png"}; //6
+karty[6]={nazwa:"Kapłan", wartosc:2, img:"/list/6.png"}; //2
+karty[7]={nazwa:"Kapłan", wartosc:2, img:"/list/6.png"}; //2
+karty[8]={nazwa:"Baron", wartosc:3, img:"/list/8.png"};  //2
+karty[9]={nazwa:"Baron", wartosc:3, img:"/list/8.png"};  //2
+karty[10]={nazwa:"Pokojówka", wartosc:4, img:"/list/10.png"};  //2
+karty[11]={nazwa:"Pokojówka", wartosc:4, img:"/list/10.png"};  //2
+karty[12]={nazwa:"Książe", wartosc:5, img:"/list/12.png"};  //1
+karty[13]={nazwa:"Król", wartosc:6, img:"/list/13.png"};  //1
+karty[14]={nazwa:"Hrabina", wartosc:7, img:"/list/14.png"};  //1
+karty[15]={nazwa:"Księzniczka", wartosc:8, img:"/list/15.png"}; //1
+
+//tasowanie
+function tasuj(arr) {
+    for (var i=0; i<arr.length; i++) {
+        var j = Math.floor(Math.random() * arr.length);
+        var temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+    }
+    return arr;
+}
+function nowagra(){
+tasuj(karty);
+for(i=0; i<=ilosc;i++){
+
+document.getElementById("gracz"+i).innerHTML="<img src='."+karty[i+1].img+"'>";
+}
+}
+nowagra();
+</script>

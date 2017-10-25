@@ -1,0 +1,280 @@
+﻿<head>
+<meta charset="utf-8">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
+</head>
+
+<style>
+img {
+	cursor:hand;
+}
+#przyciski button{
+	width:180px;
+	border-radius:5px;
+	height:30px;
+	margin-bottom:10px;
+}
+#przyciski button:hover{
+	cursor:hand;
+}
+
+table td{
+	width:200px;
+	height:270px;
+}
+<script>
+/* for(i=0;i<=ilosc;i++){
+document.getElementById("gracze").innerHTML+= '<div id="gracz'+i+'" style="float:left;">Karty gracza</div>';
+}
+*/
+
+
+
+</script>
+</style>
+<div id="przyciski" >
+<button onclick="myFunction()">Nowa gra</button><br />
+<button onclick="myFunction1()">Dołącz</button>
+</div>
+
+<script>
+var socket,ilosc,nazwapokoju;
+var iloscgraczy=1; 
+var id=0;
+var info;
+var talia=[];
+var karty=[];
+var reka=[];
+var listagraczy=[];
+karty[0]={nazwa:"Strażniczka", wartosc:1, img:"./list/0.png",}; //6
+karty[1]={nazwa:"Strażniczka", wartosc:1, img:"./list/0.png"}; //6
+karty[2]={nazwa:"Strażniczka", wartosc:1, img:"./list/0.png"}; //6
+karty[3]={nazwa:"Strażniczka", wartosc:1, img:"./list/0.png"}; //6
+karty[4]={nazwa:"Strażniczka", wartosc:1, img:"./list/0.png"}; //6
+karty[5]={nazwa:"Strażniczka", wartosc:1, img:"./list/0.png"}; //6
+karty[6]={nazwa:"Kapłan", wartosc:2, img:"./list/6.png"}; //2
+karty[7]={nazwa:"Kapłan", wartosc:2, img:"./list/6.png"}; //2
+karty[8]={nazwa:"Baron", wartosc:3, img:"./list/8.png"};  //2
+karty[9]={nazwa:"Baron", wartosc:3, img:"./list/8.png"};  //2
+karty[10]={nazwa:"Pokojówka", wartosc:4, img:"./list/10.png"};  //2
+karty[11]={nazwa:"Pokojówka", wartosc:4, img:"./list/10.png"};  //2
+karty[12]={nazwa:"Książe", wartosc:5, img:"./list/12.png"};  //1
+karty[13]={nazwa:"Król", wartosc:6, img:"./list/13.png"};  //1
+karty[14]={nazwa:"Hrabina", wartosc:7, img:"./list/14.png"};  //1
+karty[15]={nazwa:"Księzniczka", wartosc:8, img:"./list/15.png"}; //1
+
+
+socket = io.connect('http://localhost:3000');
+
+//wyśli żądanie utworzenia pokoju
+function myFunction() {
+	id = 0;
+	if(socket.connected==true){
+		var nazwapokoju = window.prompt("Podaj nazwe pokoju");
+		socket.emit('nowagra', nazwapokoju);
+		document.getElementById("przyciski").innerHTML=" ";
+	}else{
+		alert('serwer jest wyłączony!');
+
+	}
+	
+}
+
+//wyślij żądanie wyświetlenia pokoi
+function myFunction1() {
+	if(socket.connected==true){
+		document.getElementById('mojakarta').innerHTML=" ";
+		socket.emit('dolacz', "dolacz");
+	}else{
+		alert('serwer jest wyłączony!');
+
+	}
+}
+
+//Wyświetla liste pokoi
+socket.on("pokoje", listapokoi);
+	function listapokoi(data){
+		if(data.length==0){
+		alert("Nie ma pokoi");
+		document.getElementById("przyciski").innerHTML = '<button onclick="myFunction()">Nowa gra</button><br /><button onclick="myFunction1()">Dołącz</button>'
+		}else{
+			document.getElementById("przyciski").innerHTML=" ";
+			for(i=0;i<data.length;i++){
+				document.getElementById("przyciski").innerHTML=document.getElementById("przyciski").innerHTML+"<button onclick='dolacz(this)' value='"+i+"'>"+data[i]+"</button><br />";
+			}
+		}
+	}
+
+	
+//nick
+
+nick(prompt('Podaj nick', ''));
+function nick(data){
+if(data!=null || data!=0){
+socket.emit('nick', data);
+}
+}	
+	
+//Wysyła który pokoj wybrany
+function dolacz(data){
+	socket.emit('wybierz', {"id":data.value,"war":data.innerHTML});
+}
+
+//Przy Odłączeniu gracza wyświetla informacje
+socket.on("iloscgraczy", function(data){iloscgraczy--;
+socket.emit("gracze", iloscgraczy-1);
+alert("Gracz odłączył się :/ \nIlość graczy w pokoju: "+iloscgraczy);
+});
+
+
+//przy usunięciu pokoju w którym jesteś 
+socket.on('usunieto',function(){
+if (confirm('Pokój został usunięty, zostaniesz przniesiony do lobby')) {
+		document.getElementById('mojakarta').innerHTML=" ";
+		document.getElementById('talia1').innerHTML=" ";
+		document.getElementById('gracze0').innerHTML=" ";
+		document.getElementById('gracze1').innerHTML=" ";
+		document.getElementById('gracze2').innerHTML=" ";
+		document.getElementById("przyciski").innerHTML = '<button onclick="myFunction()">Nowa gra</button><br /><button onclick="myFunction1()">Dołącz</button>'
+	} else {
+		document.getElementById('mojakarta').innerHTML=" ";
+		document.getElementById('talia1').innerHTML=" ";
+		document.getElementById('gracze0').innerHTML=" ";
+		document.getElementById('gracze1').innerHTML=" ";
+		document.getElementById('gracze2').innerHTML=" ";
+		document.getElementById("przyciski").innerHTML = '<button onclick="myFunction()">Nowa gra</button><br /><button onclick="myFunction1()">Dołącz</button>'
+	}
+});
+
+//maksymalna ilość graczy
+socket.on('limit', function(data){
+alert("W tym pokoju jest już maksymalna ilość graczy");
+});
+
+//id gracza
+socket.on("id", function(data){
+	id=data.indexOf(socket.id);
+	console.log(id);
+});
+
+//Jeśli dołączył się gracz pyta czy uruchomic gre
+socket.on("sprawdzwl", sprawdzwl);
+function sprawdzwl(data){
+	iloscgraczy++;
+	socket.emit("gracze", iloscgraczy-1);
+	if (confirm('Do pokoju dołączył gracz, Chcesz uruchomić gre? \nTeraz w pokoju znajduje się: ' + iloscgraczy + " graczy.")) {
+		
+		socket.emit('rozgrywka1', iloscgraczy);
+	} else {
+		// Do nothing!
+	}
+}
+
+socket.on('trwa', function(data){
+	alert("sorry ta rozgrywka już trwa");
+});
+
+//dołącza do pokoju
+socket.on("wybrales", wybrales);
+function wybrales(data){
+	if (data.pokoj==null){
+		alert("Pokój już nie istnieje :/ ");
+		myFunction1();
+	}else{
+		alert("Wybrałeś: "+data.pokoj);
+		document.getElementById("przyciski").innerHTML = " ";
+		}
+}
+
+//sprawdza czy pokój jeszcze istnieje
+socket.on("niama", function(data){alert("Ten pokój już nie istnieje :/");
+ myFunction1();
+ });
+ 
+ 
+//Pobiera talie
+socket.on('rozgrywka2',function(data){
+	for(i=0;i<data.talia.length;i++){
+		talia[i]=karty[data.talia[i]];
+	}
+	
+	listagraczy=data.gracze;
+	rozdaj(data.ilosc);
+});
+
+//Rozdawanie karty
+function rozdaj(p){
+	
+	document.getElementById("mojakarta").innerHTML="Twoje karty "+listagraczy[id]+": <img src='"+talia[id].img+"'>";
+	document.getElementById("talia1").innerHTML="Talia: <img src='./list/rewers.png'>";
+	
+	//wypisywanie nicków graczy
+	for(i=0;i<p-1;i++){
+		var c=i+2;
+		function imiona(data){
+			if(data+id+1>=listagraczy.length ){
+				
+				if(id-data-1>0){
+					if(id==listagraczy.length-1){
+						return(listagraczy[data]);
+					}else{
+					return(listagraczy[id-data-1]);
+					}
+				}else{
+					return(listagraczy[id-data]);
+				}
+			}else{
+				return(listagraczy[data+id+1]);
+			
+			}
+		}
+		document.getElementById("gracze"+i).innerHTML = "Gracz "+c+" "+ imiona(i) +": <img src='./list/rewers.png'>";
+	}
+	
+}
+
+socket.on('twojruch', twojruch);
+function twojruch(data){
+console.log("ok");
+	document.getElementById("mojakarta2").innerHTML="Dobrana: <img src='"+talia[id+listagraczy.length].img+"'>";
+}
+
+//po ruchu talia.splice(0, x-ilosc graczy);
+</script>
+
+<div id="talia" style="float:left;">
+<img src="./list/re.png" onclick="nowagra()" style="width:178;height:252;">
+</div>
+<br />
+<center>
+<table>
+<tr>
+	<td>
+	</td>
+	<td>
+		<div id="gracze1">
+		</div>
+	</td>
+	<td>
+		
+	</td>
+</tr>	
+	<td>
+		<div id="gracze0">
+		</div>
+	</td>
+	<td><div id="talia1"></div></td>
+	<td>
+		<div id="gracze2">
+		</div>
+	</td>
+</tr>
+<tr>
+	<td></td>
+	<td>
+		<div id="mojakarta">
+		</div>
+	</td>
+	<td><div id="mojakarta2"></div></td>
+</tr>
+</table>
+	
